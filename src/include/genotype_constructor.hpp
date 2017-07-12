@@ -36,7 +36,7 @@ public:
     }
 
 private:
-    Model model;
+    Model &model;
 };
 
 } // namespace ga

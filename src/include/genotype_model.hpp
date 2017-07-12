@@ -62,6 +62,11 @@ public:
         return params[index];
     }
 
+    const gene_params &get_gene_params(const std::size_t index) const
+    {
+        return params[index];
+    }
+
     std::size_t size() const
     {
         return params.size();

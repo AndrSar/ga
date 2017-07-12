@@ -1,8 +1,12 @@
 #pragma once
 
 #include "detail/detail.hpp"
+#include "genotype_constructor.hpp"
+#include "functions.hpp"
+
 #include <vector>
 #include <algorithm>
+#include <memory>
 
 
 namespace ga
@@ -13,6 +17,7 @@ class population
 {
 public:
     using Genotype = typename GenotypeModel::representation;
+    using GenotypeConstructor = genotype_constructor<GenotypeModel>;
 
     struct genotype_fitness
     {
@@ -21,7 +26,10 @@ public:
     };
 
 public:
-    population(std::size_t size): max_population_size(size)
+    population(const std::shared_ptr<GenotypeModel> &model, std::size_t size):
+            max_population_size(size),
+            model(model),
+            constructor(*model)
     {
         generation.reserve(max_population_size);
         fitness_values.reserve(max_population_size);
@@ -30,48 +38,39 @@ public:
 
     void init()
     {
-        generation = std::vector<Genotype>(max_population_size);
         fitness_values = std::vector<genotype_fitness>(max_population_size);
 
-        for (auto &g: generation)
+        for (std::size_t i = 0; i < max_population_size; ++i)
         {
-            init_function(g);
+            generation.push_back(constructor.construct_random());
         }
     }
 
 
-    void make_selection(const unsigned int ranking_groups_number)
+    void make_selection(const std::size_t ranking_groups_number, functions::rank_distribution func)
     {
         sort_fitness_values();
         std::vector<Genotype> new_generation;
         new_generation.reserve(max_population_size);
 
-        const std::size_t basic_group_size = generation.size() / ranking_groups_number;
-        std::size_t group_size = basic_group_size;
-        for (unsigned int rank_index = 0; rank_index < ranking_groups_number; ++rank_index)
-        {
-            const std::size_t begin = rank_index * basic_group_size;
-            const std::size_t end = begin + group_size;
-            for (std::size_t i = begin; i < end; ++i)
-            {
-                genotype_fitness &gf = fitness_values[i];
-                new_generation.push_back(std::move(*gf.genotype));
+        const auto new_gen_ptrs = detail::split_by_groups_and_select(fitness_values, ranking_groups_number, func);
 
-            }
-            group_size = static_cast<std::size_t>(static_cast<float>(group_size) / 1.5f);
+        for (unsigned int i = 0; i < new_gen_ptrs.size(); ++i)
+        {
+            new_generation.push_back(*(new_gen_ptrs[i].genotype));
         }
 
         generation = std::move(new_generation);
     }
 
 
-    void calculate_fitness(std::function<double(const Genotype &)> &fitness_function)
+    void calculate_fitness(functions::fitness<Genotype> func)
     {
         double fitness_sum = 0;
         max_fitness = 0;
         for (std::size_t i = 0; i < generation.size(); ++i)
         {
-            const double fitness = fitness_function(generation[i]);
+            const double fitness = func(generation[i]);
             fitness_sum += fitness;
             fitness_values[i] = genotype_fitness{fitness, &generation[i]};
             if (fitness > max_fitness)
@@ -82,35 +81,25 @@ public:
     }
 
 
-    void reproduce(std::function<Genotype(const Genotype &, const Genotype &)> crossingover_function)
+    void reproduce()
     {
         random_generator rg;
 
         const std::size_t last_generation_member_index = generation.size() - 1;
+        const std::size_t amount = max_population_size - generation.size();
 
+        std::size_t first_parent = 0;
+        for (std::size_t k = 0; k < amount; k += 2)
         {
-            std::size_t first_parent = 0;
-            std::size_t leaders_count_left = max_population_size / 10;
+            const std::size_t second_parent = rg.generate(
+                    std::uniform_int_distribution<std::size_t>(k, last_generation_member_index));
 
-            while (max_population_size > generation.size() && leaders_count_left > 0) {
-                std::size_t second_parent =
-                        rg.generate(
-                std::uniform_int_distribution<unsigned long>(first_parent + 1, last_generation_member_index));
-                generation.push_back(crossingover_function(generation[first_parent], generation[second_parent]));
-                ++first_parent;
-                --leaders_count_left;
-            }
-        }
+            auto children = model->crossover(generation[first_parent], generation[second_parent]);
 
+            generation.push_back(std::move(children.first));
+            if (k + 1 < amount) generation.push_back(std::move(children.second));
 
-        while (max_population_size > generation.size())
-        {
-            std::size_t first_parent =
-            rg.generate(std::uniform_int_distribution<unsigned long>(0, last_generation_member_index));
-            std::size_t second_parent =
-                    first_parent + 1 < last_generation_member_index ? first_parent + 1 : first_parent - 1;
-
-            generation.push_back(crossingover_function(generation[first_parent], generation[second_parent]));
+            ++first_parent;
         }
     }
 
@@ -125,6 +114,11 @@ public:
         return overall_fitness;
     }
 
+    GenotypeModel &get_genotype_model()
+    {
+        return *model;
+    }
+
 private:
     void sort_fitness_values()
     {
@@ -134,6 +128,8 @@ private:
     }
 
 private:
+    std::shared_ptr<GenotypeModel> model;
+    GenotypeConstructor constructor;
     std::size_t max_population_size;
     std::vector<Genotype> generation;
     std::vector<genotype_fitness> fitness_values;
