@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <random>
+#include <iterator>
 
 
 namespace ga
@@ -45,6 +46,15 @@ public:
     {
         std::uniform_real_distribution<short> d(min, max);
         return generate(d);
+    }
+
+    template <class Cont>
+    auto &pick_item(Cont &container)
+    {
+        std::uniform_int_distribution<std::size_t> d(0, container.size() - 1);
+        auto it = container.begin();
+        std::advance(it, d(generator));
+        return *it;
     }
 
 private:

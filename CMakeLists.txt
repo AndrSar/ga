@@ -9,8 +9,8 @@ add_compile_options(-std=c++14)
 add_library(ga
         src/include/ga.hpp
         src/ga.cpp
-        src/include/detail.hpp
-        src/include/random_generator.hpp)
+        src/include/detail/detail.hpp
+        src/include/random_generator.hpp src/include/genotype_model.hpp src/include/genotype_constructor.hpp src/include/operators/mutation.hpp src/include/operators/crossover.hpp src/include/population.hpp)
 
 target_include_directories(ga PUBLIC src/include)
 

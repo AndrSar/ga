@@ -1,6 +1,6 @@
 #include "test.hpp"
 #include "../include/ga.hpp"
-#include "../include/detail.hpp"
+#include "../include/detail/detail.hpp"
 
 #include <iostream>
 #include <numeric>
