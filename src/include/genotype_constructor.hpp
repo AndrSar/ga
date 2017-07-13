@@ -1,6 +1,7 @@
 #pragma once
 
 #include "random_generator.hpp"
+#include <memory>
 
 
 namespace ga
@@ -14,7 +15,7 @@ public:
     using gene_value_type = typename Model::value_type;
 
 public:
-    genotype_constructor(const Model &model): model(model)
+    genotype_constructor(const std::shared_ptr<Model> &model): model(model)
     {
     }
 
@@ -22,11 +23,14 @@ public:
     {
         random_generator rg;
         genotype_representation result;
-        result.reserve(model.size());
 
-        for (std::size_t i = 0; i < model.size(); ++i)
+        auto _model = model.lock();
+
+        result.reserve(_model->size());
+
+        for (std::size_t i = 0; i < _model->size(); ++i)
         {
-            auto gene_params = model.get_gene_params(i);
+            auto gene_params = _model->get_gene_params(i);
             result.push_back(
                     rg.generate_with_uniform_distribution<gene_value_type>(gene_params.min_value, gene_params.max_value)
             );
@@ -36,7 +40,7 @@ public:
     }
 
 private:
-    Model &model;
+    std::weak_ptr<Model> model;
 };
 
 } // namespace ga

@@ -23,13 +23,26 @@ public:
     {
         double fitness;
         Genotype *genotype;
+
+        genotype_fitness(): fitness(0),
+                            genotype(nullptr)
+        {
+        }
+
+        genotype_fitness(double fitness, Genotype *ptr):
+                fitness(fitness),
+                genotype(ptr)
+        {
+        }
     };
 
 public:
     population(const std::shared_ptr<GenotypeModel> &model, std::size_t size):
             max_population_size(size),
             model(model),
-            constructor(*model)
+            constructor(model),
+            max_fitness(0),
+            overall_fitness(0)
     {
         generation.reserve(max_population_size);
         fitness_values.reserve(max_population_size);
@@ -58,8 +71,11 @@ public:
         for (std::size_t i = 0; i < new_gen_ptrs.size(); ++i)
         {
             new_generation.push_back(*(new_gen_ptrs[i].genotype));
+            fitness_values[i].fitness = new_gen_ptrs[i].fitness;
+            fitness_values[i].genotype = &new_generation.back();
         }
 
+        //std::size_t new_generation_size = new_generation.size();
         generation = std::move(new_generation);
     }
 
@@ -121,7 +137,12 @@ public:
         return *model;
     }
 
-private:
+    const Genotype &get_best_genotype() const
+    {
+        return *fitness_values.front().genotype;
+    }
+
+
     void sort_fitness_values()
     {
         std::sort(fitness_values.begin(), fitness_values.end(), [](genotype_fitness &a, genotype_fitness &b) {

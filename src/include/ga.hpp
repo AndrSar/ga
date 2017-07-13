@@ -8,6 +8,7 @@
 #include "genotype_model.hpp"
 #include "population.hpp"
 #include "functions.hpp"
+#include "logger.hpp"
 
 #include <vector>
 #include <cstddef>
@@ -26,7 +27,7 @@ struct parameters
 {
     parameters(): population_size(500),
                   generations_limit(1000000),
-                  desired_fitness_cap(0.85),
+                  desired_fitness_cap(0.88),
                   time_limit(std::chrono::milliseconds(5000)),
                   ranking_groups_number(5),
                   genes_mutation_basic_probability(0.01),
@@ -42,13 +43,6 @@ struct parameters
     unsigned int ranking_groups_number;
     double genes_mutation_basic_probability;
     bool gather_statistics;
-};
-
-
-class Logger
-{
-public:
-    virtual void log(const std::string &str) = 0;
 };
 
 
@@ -72,7 +66,7 @@ public:
     {
     }
 
-    population_type run(const parameters& params, Logger &logger)
+    population_type run(const parameters& params, logger &log)
     {
         population_type population(model.lock(), params.population_size);
         population.init();
@@ -80,19 +74,27 @@ public:
         const auto start_time = std::chrono::steady_clock::now();
         time_passed = std::chrono::milliseconds(0);
 
+        generations_count = 0;
+        best_achieved_fitness = 0;
+
         while (params.generations_limit > generations_count &&
                params.desired_fitness_cap > best_achieved_fitness &&
                params.time_limit > time_passed)
         {
 
             population.calculate_fitness(fitness_function);
+            best_achieved_fitness = population.get_max_fitness();
             population.make_selection(params.ranking_groups_number, rank_distribution_function);
             population.reproduce();
+
+            log._log(std::to_string(generations_count) + " : " + std::to_string(population.get_max_fitness()));
 
             time_passed =
                     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
             ++generations_count;
         }
+
+        log._log("Took " + std::to_string(time_passed.count()) + " milliseconds");
 
         return population;
     }

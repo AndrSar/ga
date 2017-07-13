@@ -3,12 +3,17 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <random>
 
 
-class ConsoleLogger : public ga::Logger
+class console_logger : public ga::logger
 {
 public:
-    void log(const std::string &str) override
+    console_logger() : ga::logger()
+    {
+    }
+
+    void _log(const std::string &str) override
     {
         std::cout << str << std::endl;
     }
@@ -30,25 +35,51 @@ public:
 
     auto get_genotype_model()
     {
-        return std::make_shared<genotype_model_type>(
+        auto model = std::make_shared<genotype_model_type>(
                 gene_params_type{0, static_cast<short>(bins_count - 1)},
                 elements.size()
         );
+
+        model->set_crossover_operator(
+                std::make_unique<ga::operators::one_point_crossover<genotype_model_type>>()
+        );
+
+        using distribution_type = std::uniform_int_distribution<short>;
+        model->add_mutation_operator(
+                std::make_unique<ga::operators::random_value_mutation<genotype_model_type, distribution_type>>(0.03)
+        );
+
+        model->add_mutation_operator(
+                std::make_unique<ga::operators::random_value_shift_mutation<genotype_model_type>>(0.05)
+        );
+
+        return model;
     }
 
     auto get_solution_quality_function()
     {
         const int sum = std::accumulate(elements.cbegin(), elements.cend(), 0);
         const double expected_bin_load = sum / bins_count;
-        return [&elements, expected_bin_load](const genotype_representation &genotype) -> double
+
+        return [this, expected_bin_load](const genotype_representation &genotype) -> double
         {
-            std::vector<int> bins(static_cast<std::size_t>(bins_count));
+            std::vector<int> bins(static_cast<std::size_t>(bins_count), 0);
+            std::vector<double> load_balance(bins.size(), 0);
+
             for (std::size_t i = 0; i < genotype.size(); ++i)
             {
                 bins[static_cast<std::size_t>(genotype[i])] += elements[i];
             }
 
+            for (std::size_t i = 0; i < bins.size(); ++i)
+            {
+                const double diff = std::abs(expected_bin_load - static_cast<double>(bins[i]));
+                load_balance[i] = 1.0 - (diff / expected_bin_load);
+            }
 
+            const double average_result =
+                    std::accumulate(load_balance.cbegin(), load_balance.cend(), 0.0) / load_balance.size();
+            return average_result;
         };
     }
 
@@ -60,11 +91,29 @@ private:
 
 int main(int argc, const char * const * argv)
 {
-    using genotype_model_type = ga::genotype_model<short>;
-    using gene_params_type = genotype_model_type::gene_params;
+    console_logger logger;
 
-    auto genotype_model = std::make_shared<genotype_model_type>(gene_params_type{0, 2});
-    ga::algorithm<genotype_model_type> ga_algorithm{genotype_model, };
+    const std::vector<double> vals = {0.5, 1.5, 1.5, 1, 1.5, 1, 1.5, 1, 1.5, 2, 1.5, 2, 2, 1, 2, 0.5, 1, 1.5, 1, 0.5, 2, 2, 1.5, 1, 1.5, 1, 2, 2, 2, 2, 1, 2, 2, 2.5, 1.5, 1.5, 2, 2, 1.5, 2, 2, 1.5, 1.5, 0.6, 0.96, .34, 2, 1.5, 1.5, 1.68, 1.68, 1.34, 1, 1.84, 1.5, 1.84, 1.5, 2, 2, 0.5, 2, 2.5, 1.5, 1.5, 2.34, 2, 1.5, 1, 1.5, 1.34, 2.5, 2.34, 1.5, 2, 1.5, 2.5, 1.5, 2.34, 0.84, 1.5, 1.84, 1.84, 2, 1, 1, 0.84, 2, 0.84, 2, 1.5, 0.84, 2, 2, 1.84, 2};
+    std::vector<int> converted_vals;
+    for (const auto &val: vals)
+    {
+        converted_vals.push_back(static_cast<int>(val * 1000.0));
+    }
+
+    optimisation_problem problem{converted_vals, 3};
+
+    auto genotype_model =  problem.get_genotype_model();
+
+    ga::algorithm<optimisation_problem::genotype_model_type> ga_algorithm{
+            genotype_model, problem.get_solution_quality_function(), [](std::size_t i) {return 0.5;}};
+
+    ga::parameters params;
+    params.time_limit = std::chrono::seconds(60);
+    auto solution = ga_algorithm.run(params, logger);
+
+    const auto &genotype = solution.get_best_genotype();
+
+    std::cout << "Best solution: " <<  problem.get_solution_quality_function()(genotype) << std::endl;
 
     return 0;
 }

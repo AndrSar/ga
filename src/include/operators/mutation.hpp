@@ -35,7 +35,7 @@ public:
 protected:
     bool will_apply(const GenotypeModel &model, const std::size_t gene_index)
     {
-        double p = probability * model.get_gene_params[gene_index].mutation_probability_multiplier;
+        double p = probability * model.get_gene_params(gene_index).mutation_probability_multiplier;
         if (p > 1.0) p = 1.0;
         if (p < 0.0) p = 0.0;
         std::bernoulli_distribution bd(p);
@@ -67,9 +67,9 @@ public:
     void apply(const GenotypeModel &model, genotype &g) override final
     {
         const std::size_t index = this->rg.generate(std::uniform_int_distribution<unsigned long>(0, g.size() - 1));
-        if (will_apply(model, index))
+        if (this->will_apply(model, index))
         {
-            const auto &gene_params = model.get_gene_params[index];
+            const auto &gene_params = model.get_gene_params(index);
             g[index] = this->rg.generate(Distribution(gene_params.min_value, gene_params.max_value));
         }
     }
@@ -92,9 +92,9 @@ public:
     void apply(const GenotypeModel &model, genotype &g) override final
     {
         const std::size_t index = this->rg.generate(std::uniform_int_distribution<unsigned long>(0, g.size() - 1));
-        if (will_apply(model, index))
+        if (this->will_apply(model, index))
         {
-            const auto &gene_params = model.get_gene_params[index];
+            const auto &gene_params = model.get_gene_params(index);
             std::bernoulli_distribution bd;
             auto &gene = g[index];
             if (this->rg.generate(bd))
