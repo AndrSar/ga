@@ -55,7 +55,7 @@ public:
 
         const auto new_gen_ptrs = detail::split_by_groups_and_select(fitness_values, ranking_groups_number, func);
 
-        for (unsigned int i = 0; i < new_gen_ptrs.size(); ++i)
+        for (std::size_t i = 0; i < new_gen_ptrs.size(); ++i)
         {
             new_generation.push_back(*(new_gen_ptrs[i].genotype));
         }
@@ -95,6 +95,8 @@ public:
                     std::uniform_int_distribution<std::size_t>(k, last_generation_member_index));
 
             auto children = model->crossover(generation[first_parent], generation[second_parent]);
+            model->mutate(children.first);
+            model->mutate(children.second);
 
             generation.push_back(std::move(children.first));
             if (k + 1 < amount) generation.push_back(std::move(children.second));

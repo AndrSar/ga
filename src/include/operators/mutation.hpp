@@ -55,6 +55,10 @@ template <class GenotypeModel, class Distribution>
 class random_value_mutation : public mutation<GenotypeModel>
 {
 public:
+    using genotype = typename GenotypeModel::representation;
+    using gene_value_type = typename GenotypeModel::value_type;
+
+public:
     random_value_mutation(double probability):
             mutation<GenotypeModel>(probability)
     {
@@ -62,11 +66,11 @@ public:
 
     void apply(const GenotypeModel &model, genotype &g) override final
     {
-        const std::size_t index = rg.generate(std::uniform_int_distribution<unsigned long>(0, g.size() - 1));
+        const std::size_t index = this->rg.generate(std::uniform_int_distribution<unsigned long>(0, g.size() - 1));
         if (will_apply(model, index))
         {
             const auto &gene_params = model.get_gene_params[index];
-            g[index] = rg.generate(Distribution(gene_params.min_value, gene_params.max_value));
+            g[index] = this->rg.generate(Distribution(gene_params.min_value, gene_params.max_value));
         }
     }
 };
@@ -76,6 +80,10 @@ template <class GenotypeModel>
 class random_value_shift_mutation : public mutation<GenotypeModel>
 {
 public:
+    using genotype = typename GenotypeModel::representation;
+    using gene_value_type = typename GenotypeModel::value_type;
+
+public:
     random_value_shift_mutation(double probability):
             mutation<GenotypeModel>(probability)
     {
@@ -83,13 +91,13 @@ public:
 
     void apply(const GenotypeModel &model, genotype &g) override final
     {
-        const std::size_t index = rg.generate(std::uniform_int_distribution<unsigned long>(0, g.size() - 1));
+        const std::size_t index = this->rg.generate(std::uniform_int_distribution<unsigned long>(0, g.size() - 1));
         if (will_apply(model, index))
         {
             const auto &gene_params = model.get_gene_params[index];
             std::bernoulli_distribution bd;
             auto &gene = g[index];
-            if (rg.generate(bd))
+            if (this->rg.generate(bd))
             {
                 gene += gene_params.increment;
             }

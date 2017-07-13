@@ -27,27 +27,6 @@ public:
         return T();
     }
 
-    template <>
-    int generate_with_uniform_distribution<int>(const int &min, const int &max)
-    {
-        std::uniform_int_distribution<int> d(min, max);
-        return generate(d);
-    }
-
-    template <>
-    short generate_with_uniform_distribution<short>(const short &min, const short &max)
-    {
-        std::uniform_int_distribution<short> d(min, max);
-        return generate(d);
-    }
-
-    template <>
-    double generate_with_uniform_distribution<double>(const double &min, const double &max)
-    {
-        std::uniform_real_distribution<short> d(min, max);
-        return generate(d);
-    }
-
     template <class Cont>
     auto &pick_item(Cont &container)
     {
@@ -61,5 +40,27 @@ private:
     std::random_device random_device;
     std::minstd_rand generator;
 };
+
+
+template <>
+int random_generator::generate_with_uniform_distribution<int>(const int &min, const int &max)
+{
+    std::uniform_int_distribution<int> d(min, max);
+    return generate(d);
+}
+
+template <>
+short random_generator::generate_with_uniform_distribution<short>(const short &min, const short &max)
+{
+    std::uniform_int_distribution<short> d(min, max);
+    return generate(d);
+}
+
+template <>
+double random_generator::generate_with_uniform_distribution<double>(const double &min, const double &max)
+{
+    std::uniform_real_distribution<double> d(min, max);
+    return generate(d);
+}
 
 }

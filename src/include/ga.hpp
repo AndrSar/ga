@@ -45,6 +45,13 @@ struct parameters
 };
 
 
+class Logger
+{
+public:
+    virtual void log(const std::string &str) = 0;
+};
+
+
 template <class GenotypeModel>
 class algorithm
 {
@@ -52,10 +59,12 @@ public:
     using Genotype = typename GenotypeModel::representation;
     using population_type = population<GenotypeModel>;
 
-    algorithm(const std::shared_ptr<GenotypeModel> model,
-              functions::fitness<Genotype> fitness_function):
+    algorithm(const std::shared_ptr<GenotypeModel> &model,
+              functions::fitness<Genotype> fitness_function,
+              functions::rank_distribution rank_distribution_function):
             model(model),
             fitness_function(fitness_function),
+            rank_distribution_function(rank_distribution_function),
             generations_count(0),
             best_achieved_fitness(0),
             time_passed(0)
@@ -63,10 +72,10 @@ public:
     {
     }
 
-    population_type run(const parameters& params)
+    population_type run(const parameters& params, Logger &logger)
     {
-        population_type pop(model.lock(), params.population_size);
-        pop.init();
+        population_type population(model.lock(), params.population_size);
+        population.init();
 
         const auto start_time = std::chrono::steady_clock::now();
         time_passed = std::chrono::milliseconds(0);
@@ -76,17 +85,22 @@ public:
                params.time_limit > time_passed)
         {
 
+            population.calculate_fitness(fitness_function);
+            population.make_selection(params.ranking_groups_number, rank_distribution_function);
+            population.reproduce();
+
             time_passed =
                     std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
             ++generations_count;
         }
 
-        return pop;
+        return population;
     }
 
 private:
     std::weak_ptr<GenotypeModel> model;
     functions::fitness<Genotype> fitness_function;
+    functions::rank_distribution rank_distribution_function;
     std::chrono::milliseconds time_passed;
     unsigned long generations_count;
     double best_achieved_fitness;

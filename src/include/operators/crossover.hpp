@@ -26,6 +26,10 @@ template <class GenotypeModel>
 class one_point_crossover : public crossover<GenotypeModel>
 {
 public:
+    using genotype = typename GenotypeModel::representation;
+    using gene_value_type = typename GenotypeModel::value_type;
+
+public:
     std::pair<genotype, genotype>
     apply(const genotype &a, const genotype &b) override
     {
