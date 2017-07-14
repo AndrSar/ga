@@ -31,9 +31,8 @@ public:
         for (std::size_t i = 0; i < _model->size(); ++i)
         {
             auto gene_params = _model->get_gene_params(i);
-            result.push_back(
-                    rg.generate_with_uniform_distribution<gene_value_type>(gene_params.min_value, gene_params.max_value)
-            );
+            auto value = rg.generate_with_uniform_distribution<gene_value_type>(gene_params.min_value, gene_params.max_value);
+            result.push_back(value);
         }
 
         return result;

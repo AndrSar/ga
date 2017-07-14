@@ -27,7 +27,7 @@ struct parameters
 {
     parameters(): population_size(500),
                   generations_limit(1000000),
-                  desired_fitness_cap(0.88),
+                  desired_fitness_cap(0.9),
                   time_limit(std::chrono::milliseconds(5000)),
                   ranking_groups_number(5),
                   genes_mutation_basic_probability(0.01),

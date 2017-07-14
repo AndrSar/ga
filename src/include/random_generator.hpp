@@ -11,8 +11,9 @@ namespace ga
 class random_generator
 {
 public:
-    random_generator(): generator(random_device())
+    random_generator()
     {
+        generator.seed(random_device());
     }
 
     template <class Distribution>

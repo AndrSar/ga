@@ -4,6 +4,8 @@
 #include <iostream>
 #include <memory>
 #include <random>
+#include <algorithm>
+#include <numeric>
 
 
 class console_logger : public ga::logger
@@ -46,7 +48,7 @@ public:
 
         using distribution_type = std::uniform_int_distribution<short>;
         model->add_mutation_operator(
-                std::make_unique<ga::operators::random_value_mutation<genotype_model_type, distribution_type>>(0.03)
+                std::make_unique<ga::operators::random_value_mutation<genotype_model_type, distribution_type>>(0.05)
         );
 
         model->add_mutation_operator(
@@ -109,6 +111,8 @@ int main(int argc, const char * const * argv)
 
     ga::parameters params;
     params.time_limit = std::chrono::seconds(60);
+    params.desired_fitness_cap = 0.995;
+    //params.population_size = 500;
     auto solution = ga_algorithm.run(params, logger);
 
     const auto &genotype = solution.get_best_genotype();

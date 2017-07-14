@@ -70,7 +70,7 @@ public:
 
         for (std::size_t i = 0; i < new_gen_ptrs.size(); ++i)
         {
-            new_generation.push_back(*(new_gen_ptrs[i].genotype));
+            new_generation.push_back(std::move(*(new_gen_ptrs[i].genotype)));
             fitness_values[i].fitness = new_gen_ptrs[i].fitness;
             fitness_values[i].genotype = &new_generation.back();
         }
@@ -88,7 +88,7 @@ public:
         {
             const double fitness = func(generation[i]);
             fitness_sum += fitness;
-            fitness_values[i] = genotype_fitness{fitness, &generation[i]};
+            fitness_values[i] = genotype_fitness(fitness, &generation[i]);
             if (fitness > max_fitness)
                 max_fitness = fitness;
         }
