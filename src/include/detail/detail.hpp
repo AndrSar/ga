@@ -9,7 +9,7 @@ namespace ga
 namespace detail
 {
 
-template<class Cont>
+template <class Cont>
 Cont split_by_groups_and_select(
         const Cont &container,
         const std::size_t groups_count,
@@ -40,7 +40,7 @@ Cont split_by_groups_and_select(
 }
 
 
-template<class Genotype>
+template <class Genotype>
 auto one_point_crossover(const Genotype &a, const Genotype &b, const std::size_t point_index)
 {
     std::pair<Genotype, Genotype> result;
@@ -62,6 +62,31 @@ auto one_point_crossover(const Genotype &a, const Genotype &b, const std::size_t
 
     return result;
 }
+
+
+template <class Func, class ...Args>
+struct every_nth_time_executor
+{
+    std::function<void(Args...)> func;
+
+    every_nth_time_executor(const unsigned int n, std::function<void(Args...)> f):
+            how_much_times_between_calls(n),
+            func(f)
+    {
+    }
+
+    void operator()(Args... args)
+    {
+        ++counter;
+        if (counter == how_much_times_between_calls)
+        {
+            func(args);
+        }
+    }
+
+    unsigned int how_much_times_between_calls;
+    unsigned int counter;
+};
 
 }
 }

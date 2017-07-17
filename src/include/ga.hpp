@@ -8,7 +8,8 @@
 #include "genotype_model.hpp"
 #include "population.hpp"
 #include "functions.hpp"
-#include "logger.hpp"
+#include "statistics.hpp"
+#include "logging/logger.hpp"
 
 #include <vector>
 #include <cstddef>
@@ -66,8 +67,9 @@ public:
     {
     }
 
-    population_type run(const parameters& params, logger &log)
+    population_type run(const parameters& params, logging::logger &log)
     {
+        //stats.reserve_generation_stats_space()
         population_type population(model.lock(), params.population_size);
         population.init();
 
@@ -101,6 +103,7 @@ private:
     std::chrono::milliseconds time_passed;
     std::size_t num_of_generations_passed;
     double best_achieved_fitness;
+    statistics stats;
 };
 
 }

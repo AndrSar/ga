@@ -18,7 +18,7 @@ add_library(ga  src/include/ga.hpp
                 src/include/operators/crossover.hpp
                 src/include/population.hpp
                 src/include/functions.hpp
-                src/include/logger.hpp
+                src/include/logging/logger.hpp
                 src/include/statistics.hpp)
 
 target_include_directories(ga PUBLIC src/include)
