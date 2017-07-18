@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../statistics.hpp"
-#include <string>
 
 
 namespace ga

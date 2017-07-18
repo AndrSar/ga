@@ -31,7 +31,7 @@ struct parameters
                   desired_fitness_cap(0.9),
                   time_limit(std::chrono::milliseconds(5000)),
                   ranking_groups_number(5),
-                  gather_statistics(false)
+                  gather_generations_statistics(false)
     {
 
     }
@@ -41,7 +41,7 @@ struct parameters
     double desired_fitness_cap;
     std::chrono::milliseconds time_limit;
     std::size_t ranking_groups_number;
-    bool gather_statistics;
+    bool gather_generations_statistics;
 };
 
 
@@ -52,6 +52,7 @@ public:
     using genotype_representation = typename GenotypeModel::representation;
     using population_type = population<GenotypeModel>;
     using fitness_function_type = functions::fitness<genotype_representation>;
+    using loggers_type = std::vector<std::unique_ptr<logging::logger>>;
 
 public:
     algorithm(const std::shared_ptr<GenotypeModel> &model,
@@ -63,13 +64,17 @@ public:
             num_of_generations_passed(0),
             best_achieved_fitness(0),
             time_passed(0)
-
     {
+
     }
 
-    population_type run(const parameters& params, logging::logger &log)
+    population_type run(const parameters& params, const loggers_type &loggers = {})
     {
-        //stats.reserve_generation_stats_space()
+        if (params.gather_generations_statistics)
+        {
+            stats.reserve_generation_stats_space(1024);
+        }
+
         population_type population(model.lock(), params.population_size);
         population.init();
 
@@ -89,11 +94,27 @@ public:
             const auto now = std::chrono::steady_clock::now();
             time_passed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time);
             ++num_of_generations_passed;
+
+            // stats collection:
+            stats.set_best_achieved_fitness(best_achieved_fitness);
+            stats.set_milliseconds_passed(time_passed.count());
+            stats.add_generation_stats_entry(num_of_generations_passed, best_achieved_fitness);
+
+            // logging output:
+            for (auto &logger_ptr : loggers)
+            {
+                auto &logger = *logger_ptr;
+                logger(stats);
+            }
         }
 
-        //log._log("Took " + std::to_string(time_passed.count()) + " milliseconds");
-
         return population;
+    }
+
+
+    const statistics &get_statistics() const
+    {
+        return stats;
     }
 
 private:

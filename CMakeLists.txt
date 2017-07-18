@@ -19,7 +19,7 @@ add_library(ga  src/include/ga.hpp
                 src/include/population.hpp
                 src/include/functions.hpp
                 src/include/logging/logger.hpp
-                src/include/statistics.hpp)
+        src/include/statistics.hpp src/include/logging/console_logger.hpp)
 
 target_include_directories(ga PUBLIC src/include)
 
