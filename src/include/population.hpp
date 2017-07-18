@@ -82,7 +82,6 @@ public:
             fitness_values[i].genotype = &new_generation.back();
         }
 
-        //std::size_t new_generation_size = new_generation.size();
         generation = std::move(new_generation);
     }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../statistics.hpp"
+#include <memory>
 
 
 namespace ga
@@ -14,6 +15,8 @@ public:
     virtual void operator()(const statistics &stat) = 0;
 };
 
-
 } // namespace logging
+
+using list_of_loggers_type = std::vector<std::unique_ptr<logging::logger>>;
+
 } // namespace ga

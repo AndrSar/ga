@@ -1,4 +1,14 @@
-#include "../include/ga.hpp"
+
+//          Copyright Andrey Lifanov 2017.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file LICENSE_1_0.txt or copy at
+//          http://www.boost.org/LICENSE_1_0.txt)
+
+// This example presents the solution to the problem of even
+// placement of objects between given number of bins.
+
+#include "ga.hpp"
+#include "logging/console_logger.hpp"
 
 #include <vector>
 #include <iostream>
@@ -8,21 +18,7 @@
 #include <numeric>
 
 
-class console_logger : public ga::logger
-{
-public:
-    console_logger() : ga::logger()
-    {
-    }
-
-    void _log(const std::string &str) override
-    {
-        std::cout << str << std::endl;
-    }
-};
-
-
-class optimisation_problem
+class uniform_distribution_problem
 {
 public:
     using genotype_model_type = ga::genotype_model<short>;
@@ -30,12 +26,12 @@ public:
     using gene_params_type = genotype_model_type::gene_params;
 
 public:
-    optimisation_problem(const std::vector<int> &elements, const int bins_count):
+    uniform_distribution_problem(const std::vector<int> &elements, const int bins_count):
             elements(elements), bins_count(bins_count)
     {
     }
 
-    auto get_genotype_model()
+    auto construct_genotype_model()
     {
         auto model = std::make_shared<genotype_model_type>(
                 gene_params_type{0, static_cast<short>(bins_count - 1)},
@@ -93,7 +89,8 @@ private:
 
 int main(int argc, const char * const * argv)
 {
-    console_logger logger;
+    ga::list_of_loggers_type loggers;
+    loggers.emplace_back(new ga::logging::console_logger());
 
     const std::vector<double> vals = {0.5, 1.5, 1.5, 1, 1.5, 1, 1.5, 1, 1.5, 2, 1.5, 2, 2, 1, 2, 0.5, 1, 1.5, 1,
                                       0.5, 2, 2, 1.5, 1, 1.5, 1, 2, 2, 2, 2, 1, 2, 2, 2.5, 1.5, 1.5, 2, 2, 1.5, 2,
@@ -107,18 +104,19 @@ int main(int argc, const char * const * argv)
         converted_vals.push_back(static_cast<int>(val * 1000.0));
     }
 
-    optimisation_problem problem{converted_vals, 3};
+    uniform_distribution_problem problem{converted_vals, 3};
 
-    auto genotype_model =  problem.get_genotype_model();
+    auto genotype_model =  problem.construct_genotype_model();
 
-    ga::algorithm<optimisation_problem::genotype_model_type> ga_algorithm{
+    ga::algorithm<uniform_distribution_problem::genotype_model_type> ga_algorithm{
             genotype_model, problem.get_solution_quality_function(), [](std::size_t i) {return 0.5;}};
 
     ga::parameters params;
     params.time_limit = std::chrono::seconds(60);
     params.desired_fitness_cap = 0.995;
+    params.ranking_groups_number = 8;
     //params.population_size = 500;
-    auto solution = ga_algorithm.run(params, logger);
+    auto solution = ga_algorithm.run(params, loggers);
 
     const auto &genotype = solution.get_best_genotype();
 

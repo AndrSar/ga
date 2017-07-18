@@ -1,3 +1,9 @@
+
+//          Copyright Andrey Lifanov 2017.
+// Distributed under the Boost Software License, Version 1.0.
+//    (See accompanying file LICENSE_1_0.txt or copy at
+//          http://www.boost.org/LICENSE_1_0.txt)
+
 #pragma once
 
 #include <cstddef>
@@ -14,8 +20,13 @@ class statistics
 public:
     struct generation_record
     {
-        generation_record(): generation_index(0),
-                             best_achieved_fitness(0)
+        generation_record(const size_t generation_index, const double best_achieved_fitness) :
+                generation_index(generation_index),
+                best_achieved_fitness(best_achieved_fitness)
+        {
+        }
+
+        generation_record(): generation_record(0, 0)
         {
         }
 
@@ -24,7 +35,7 @@ public:
     };
 
 public:
-    statistics(const std::size_t generations_stats_reserved_size):
+    statistics():
             best_achieved_fitness(0),
             milliseconds_passed(0),
             gather_generations_statistics(false)
@@ -58,6 +69,21 @@ public:
     void set_milliseconds_passed(const long long value)
     {
         milliseconds_passed = value;
+    }
+
+    double get_best_achieved_fitness() const
+    {
+        return best_achieved_fitness;
+    }
+
+    long long int get_milliseconds_passed() const
+    {
+        return milliseconds_passed;
+    }
+
+    const generation_record &get_last_generation_stats() const
+    {
+        return last_generation_stats;
     }
 
 private:

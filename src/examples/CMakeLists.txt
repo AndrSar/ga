@@ -1,0 +1,2 @@
+add_executable(uniform_distribution_problem_example uniform_distribution_problem.cpp)
+target_link_libraries(uniform_distribution_problem_example PRIVATE ga)
