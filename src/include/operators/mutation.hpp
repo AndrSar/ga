@@ -32,6 +32,8 @@ public:
         probability = p;
     }
 
+    ~mutation() {}
+
 protected:
     bool will_apply(const GenotypeModel &model, const std::size_t gene_index)
     {

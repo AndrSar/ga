@@ -7,7 +7,7 @@
 // This example presents the solution to the problem of even
 // placement of objects between given number of bins.
 
-#include "ga.hpp"
+#include "api.hpp"
 #include "logging/console_logger.hpp"
 
 #include <vector>
@@ -33,23 +33,10 @@ public:
 
     auto construct_genotype_model()
     {
-        auto model = std::make_shared<genotype_model_type>(
-                gene_params_type{0, static_cast<short>(bins_count - 1)},
-                elements.size()
-        );
-
-        model->set_crossover_operator(
-                std::make_unique<ga::operators::one_point_crossover<genotype_model_type>>()
-        );
-
-        using distribution_type = std::uniform_int_distribution<short>;
-        model->add_mutation_operator(
-                std::make_unique<ga::operators::random_value_mutation<genotype_model_type, distribution_type>>(0.05)
-        );
-
-        model->add_mutation_operator(
-                std::make_unique<ga::operators::random_value_shift_mutation<genotype_model_type>>(0.05)
-        );
+        auto model = ga::api::model::create_homogeneous_model<short>(0, static_cast<short>(bins_count - 1), elements.size());
+        ga::api::model::set_one_point_crossover(model);
+        ga::api::model::add_random_value_mutation_with_uniform_distribution(model, 0.05);
+        ga::api::model::add_random_value_shift_mutation(model, 0.05);
 
         return model;
     }
@@ -107,20 +94,19 @@ int main(int argc, const char * const * argv)
     uniform_distribution_problem problem{converted_vals, 3};
 
     auto genotype_model =  problem.construct_genotype_model();
-
-    ga::algorithm<uniform_distribution_problem::genotype_model_type> ga_algorithm{
-            genotype_model, problem.get_solution_quality_function(), [](std::size_t i) {return 0.5;}};
+    auto ga_algorithm = ga::api::create_algorithm(
+            genotype_model, problem.get_solution_quality_function(), [](std::size_t i) {return 0.5;}
+    );
 
     ga::parameters params;
     params.time_limit = std::chrono::seconds(60);
-    params.desired_fitness_cap = 0.995;
-    params.ranking_groups_number = 8;
-    //params.population_size = 500;
+    params.desired_fitness_cap = 0.998;
     auto solution = ga_algorithm.run(params, loggers);
 
     const auto &genotype = solution.get_best_genotype();
 
     std::cout << "Best solution: " <<  problem.get_solution_quality_function()(genotype) << std::endl;
+    std::cout << "Took " << ga_algorithm.get_statistics().get_milliseconds_passed() << " milliseconds." << std::endl;
 
     return 0;
 }

@@ -13,6 +13,7 @@ class logger
 {
 public:
     virtual void operator()(const statistics &stat) = 0;
+    virtual ~logger() {}
 };
 
 } // namespace logging

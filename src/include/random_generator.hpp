@@ -64,4 +64,30 @@ double random_generator::generate_with_uniform_distribution<double>(const double
     return generate(d);
 }
 
+
+template <class T>
+struct select_uniform_distribution_type
+{
+    using type = void;
+};
+
+template <>
+struct select_uniform_distribution_type<short>
+{
+    using type = std::uniform_int_distribution<short>;
+};
+
+template <>
+struct select_uniform_distribution_type<int>
+{
+    using type = std::uniform_int_distribution<int>;
+};
+
+template <>
+struct select_uniform_distribution_type<double>
+{
+    using type = std::uniform_real_distribution<double>;
+};
+
+
 }

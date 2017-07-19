@@ -19,6 +19,7 @@ endif()
 add_library(ga INTERFACE)
 target_sources(ga INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/ga.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include/api.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/detail/detail.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/random_generator.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/include/genotype_model.hpp

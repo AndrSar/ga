@@ -19,6 +19,7 @@ public:
 
 public:
     virtual std::pair<genotype, genotype> apply(const genotype &a, const genotype &b) = 0;
+    ~crossover() {}
 };
 
 
